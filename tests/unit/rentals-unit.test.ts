@@ -3,51 +3,36 @@ import rentalsRepository from "../../src/repositories/rentals-repository";
 import { faker } from "@faker-js/faker";
 import { User } from "@prisma/client";
 import prisma from "../../src/database";
+import { buildRentalReturn } from "../factories/rental-factory";
 
-type UserInput = Omit<User, "id" | "rentals">;
-
-export async function buildUser(adult = true) {
-  const data: UserInput = buildUserInput(adult);
-  return await prisma.user.create({ data });
-}
-
-export function buildUserInput(adult: boolean) {
-  return {
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
-    email: faker.internet.email(),
-    birthDate: generateBirthdate(adult),
-    cpf: faker.internet.ipv4().replace(/\.$/g, ''),
-  }
-}
-
-function generateBirthdate(adult: boolean) {
-  return adult ?
-    faker.date.birthdate({ min: 18, mode: "age" }) :
-    faker.date.birthdate({ min: 10, max: 16, mode: "age" })
-}
-
-function generateValue(min: number, max: number){
-  return Math.floor(Math.random() * (max - min + 1) + min);
-}
+// para limpar todos os mock
+beforeEach(() => {
+  jest.clearAllMocks();
+});
 
 describe("Rentals Service Unit Tests", () => {
-	beforeEach(() => {
-	  jest.clearAllMocks();
-	});
+  it("should return rentals", async () => {
+    // 1 jest.spyOn(rentalsRepository, 'getRentals').mockImplementation(():any => {
+    // return [
+    //   {
+    //     id: 1,
+    //     closed: false,
+    //     date: new Date(),
+    //     endDate: new Date(),
+    //     userId: 1
+    //   }
+    // ]
 
-	it("should return rentals", async () => {
-	  jest.spyOn(rentalsRepository, "getRentals").mockResolvedValueOnce([
-	    { id: 1, closed: false, date: new Date(), endDate: new Date(), userId: 1 },
-	    { id: 2, closed: false, date: new Date(), endDate: new Date(), userId: 1 }
-	  ]);
-	
-	  const rentals = await rentalsService.getRentals();
-	  expect(rentals).toHaveLength(2);
-	});
+    // return [buildRentalReturn(1, false), buildRentalReturn(2, false)]
+    // })
+    //mock 2
+    jest
+      .spyOn(rentalsRepository, "getRentals")
+      .mockResolvedValue([buildRentalReturn(1, false)]);
 
-  it("should allow renting from 1 to 4 movies", async () => {
-   
-  })
+    // rentalsRepository.getRentals(); // simular o resultado (rentals)
 
-})
+    const rental = await rentalsService.getRentals();
+    expect(rental).toHaveLength(1);
+  });
+});
